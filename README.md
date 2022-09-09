@@ -7,12 +7,12 @@
 </h1>
 
 <h4 align="center">A complete developer experience for Shopify themes</h4>
-
+This is a readme of the Official VSCode Extension port for Open VSX. It is copied almost exactly from the MIT-licensed Shopify VS Code plugin.
 Official VS Code extension for [Shopify Liquid](https://shopify.dev/docs/themes) powered by [Theme Check][tc] the Liquid linter and language server for online store themes.
 
 ![](https://github.com/Shopify/theme-check-vscode/blob/feature/readme-revamp/images/demo.gif?raw=true)
 
-[Features](#features) |  [Installation](#installation) | [Configuration](#configuration) | [📦 VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=shopify.theme-check-vscode).
+[Features](#features) | [Installation](#installation) | [Configuration](#configuration) | [📦 VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=shopify.theme-check-vscode).
 
 ## Features
 
@@ -33,11 +33,11 @@ To install the `shopify` CLI, follow these steps:
 1. Go to https://shopify.dev/tools/cli/installation
 2. Follow the instructions for your operating system
 
------
+---
 
 ⚠️ **Warning** Windows support is experimental. See [this issue](https://github.com/Shopify/theme-check-vscode/issues/5) for details.
 
------
+---
 
 ## Configuration
 

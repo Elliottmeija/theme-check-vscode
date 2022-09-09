@@ -1,33 +1,33 @@
-const promisify = require('util').promisify;
-const exec = promisify(require('child_process').exec);
-const vscode = require('vscode');
-const { LanguageClient } = require('vscode-languageclient');
-const LiquidFormatter = require('./formatter');
+const promisify = require("util").promisify;
+const exec = promisify(require("child_process").exec);
+const vscode = require("vscode");
+const { LanguageClient } = require("vscode-languageclient");
+const LiquidFormatter = require("../extension/formatter");
 
 /**
  * @type vscode.DocumentFilter[]
  **/
 const LIQUID = [
   {
-    language: 'liquid',
-    scheme: 'file',
+    language: "liquid",
+    scheme: "file",
   },
   {
-    language: 'liquid',
-    scheme: 'untitled',
-  }
+    language: "liquid",
+    scheme: "untitled",
+  },
 ];
 
 class CommandNotFoundError extends Error {}
 
-const isWin = process.platform === 'win32';
+const isWin = process.platform === "win32";
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
 let client;
 let context;
 
 function getConfig(path) {
-  const [namespace, key] = path.split('.');
+  const [namespace, key] = path.split(".");
   return vscode.workspace.getConfiguration(namespace).get(key);
 }
 
@@ -38,17 +38,14 @@ async function activate(extensionContext) {
   context = extensionContext;
 
   context.subscriptions.push(
-    vscode.commands.registerCommand(
-      'shopifyLiquid.restart',
-      restartServer,
-    ),
+    vscode.commands.registerCommand("shopifyLiquid.restart", restartServer)
   );
   context.subscriptions.push(
-    vscode.commands.registerCommand('shopifyLiquid.runChecks', () =>
-      client.sendRequest('workspace/executeCommand', {
-        command: 'runChecks',
-      }),
-    ),
+    vscode.commands.registerCommand("shopifyLiquid.runChecks", () =>
+      client.sendRequest("workspace/executeCommand", {
+        command: "runChecks",
+      })
+    )
   );
 
   restartFormattingEditProvider();
@@ -64,28 +61,28 @@ function deactivate() {
 async function startServer() {
   const serverOptions = await getServerOptions();
   console.info(
-    'shopify.theme-check-vscode: Server options %s',
-    JSON.stringify(serverOptions, null, 2),
+    "shopify.theme-check-vscode: Server options %s",
+    JSON.stringify(serverOptions, null, 2)
   );
   if (!serverOptions) return;
 
   const clientOptions = {
     documentSelector: [
-      { scheme: 'file', language: 'liquid' },
-      { scheme: 'file', language: 'plaintext' },
-      { scheme: 'file', language: 'html' },
-      { scheme: 'file', language: 'javascript' },
-      { scheme: 'file', language: 'css' },
-      { scheme: 'file', language: 'scss' },
-      { scheme: 'file', language: 'json' },
+      { scheme: "file", language: "liquid" },
+      { scheme: "file", language: "plaintext" },
+      { scheme: "file", language: "html" },
+      { scheme: "file", language: "javascript" },
+      { scheme: "file", language: "css" },
+      { scheme: "file", language: "scss" },
+      { scheme: "file", language: "json" },
     ],
   };
 
   client = new LanguageClient(
-    'shopifyLiquid',
-    'Theme Check Language Server',
+    "shopifyLiquid",
+    "Theme Check Language Server",
     serverOptions,
-    clientOptions,
+    clientOptions
   );
 
   client.start();
@@ -110,9 +107,7 @@ async function restartServer() {
 let formattingProvider = null;
 
 async function restartFormattingEditProvider() {
-  const formatterDevPreview = getConfig(
-    'shopifyLiquid.formatterDevPreview',
-  );
+  const formatterDevPreview = getConfig("shopifyLiquid.formatterDevPreview");
 
   if (!formatterDevPreview && formattingProvider) {
     formattingProvider.dispose();
@@ -123,7 +118,7 @@ async function restartFormattingEditProvider() {
     formattingProvider =
       vscode.languages.registerDocumentFormattingEditProvider(
         LIQUID,
-        new LiquidFormatter(),
+        new LiquidFormatter()
       );
     context.subscriptions.push(formattingProvider);
   }
@@ -131,13 +126,13 @@ async function restartFormattingEditProvider() {
 
 function onConfigChange(event) {
   const didChangeThemeCheck = event.affectsConfiguration(
-    'shopifyLiquid.languageServerPath',
+    "shopifyLiquid.languageServerPath"
   );
   const didChangeShopifyCLI = event.affectsConfiguration(
-    'shopifyLiquid.shopifyCLIPath',
+    "shopifyLiquid.shopifyCLIPath"
   );
   const didChangeFormatterDevPreview = event.affectsConfiguration(
-    'shopifyLiquid.formatterDevPreview',
+    "shopifyLiquid.formatterDevPreview"
   );
   if (didChangeThemeCheck || didChangeShopifyCLI) {
     restartServer();
@@ -150,29 +145,23 @@ function onConfigChange(event) {
 
 let hasShownWarning = false;
 async function getServerOptions() {
-  const disableWarning = getConfig(
-    'shopifyLiquid.disableWindowsWarning',
-  );
+  const disableWarning = getConfig("shopifyLiquid.disableWindowsWarning");
   if (!disableWarning && isWin && !hasShownWarning) {
     hasShownWarning = true;
     vscode.window.showWarningMessage(
-      'Shopify Liquid support on Windows is experimental. Please report any issue.',
+      "Shopify Liquid support on Windows is experimental. Please report any issue."
     );
   }
-  const themeCheckPath = getConfig(
-    'shopifyLiquid.languageServerPath',
-  );
-  const shopifyCLIPath = getConfig('shopifyLiquid.shopifyCLIPath');
+  const themeCheckPath = getConfig("shopifyLiquid.languageServerPath");
+  const shopifyCLIPath = getConfig("shopifyLiquid.shopifyCLIPath");
 
   try {
     const executable =
-      (shopifyCLIPath &&
-        (await shopifyCLIExecutable(shopifyCLIPath))) ||
-      (themeCheckPath &&
-        (await themeCheckExecutable(themeCheckPath))) ||
+      (shopifyCLIPath && (await shopifyCLIExecutable(shopifyCLIPath))) ||
+      (themeCheckPath && (await themeCheckExecutable(themeCheckPath))) ||
       (await getShopifyCLIExecutable()) ||
       (await getThemeCheckExecutable());
-    if (!executable) throw new Error('No executable found');
+    if (!executable) throw new Error("No executable found");
     return executable;
   } catch (e) {
     if (e instanceof CommandNotFoundError) {
@@ -180,12 +169,12 @@ async function getServerOptions() {
     } else {
       if (isWin) {
         vscode.window.showWarningMessage(
-          `The 'theme-check-language-server' executable was not found on your $PATH. Was it installed? The path can also be changed via the "shopifyLiquid.languageServerPath" setting.`,
+          `The 'theme-check-language-server' executable was not found on your $PATH. Was it installed? The path can also be changed via the "shopifyLiquid.languageServerPath" setting.`
         );
       } else {
         console.error(e);
         vscode.window.showWarningMessage(
-          `The 'shopify' executable was not found on your $PATH. Was it installed? The path can also be changed via the "shopifyLiquid.shopifyCLIPath" setting.`,
+          `The 'shopify' executable was not found on your $PATH. Was it installed? The path can also be changed via the "shopifyLiquid.shopifyCLIPath" setting.`
         );
       }
     }
@@ -196,19 +185,19 @@ async function which(command) {
   if (isWin) {
     const { stdout } = await exec(`where.exe ${command}`);
     const executables = stdout
-      .replace(/\r/g, '')
-      .split('\n')
-      .filter((exe) => exe.endsWith('bat'));
+      .replace(/\r/g, "")
+      .split("\n")
+      .filter((exe) => exe.endsWith("bat"));
     return executables.length > 0 && executables[0];
   } else {
     const { stdout } = await exec(`which ${command}`);
-    return stdout.split('\n')[0].replace('\r', '');
+    return stdout.split("\n")[0].replace("\r", "");
   }
 }
 
 async function getShopifyCLIExecutable() {
   try {
-    const path = await which('shopify');
+    const path = await which("shopify");
     return shopifyCLIExecutable(path);
   } catch (e) {
     return undefined;
@@ -217,7 +206,7 @@ async function getShopifyCLIExecutable() {
 
 async function getThemeCheckExecutable() {
   try {
-    const path = await which('theme-check-language-server');
+    const path = await which("theme-check-language-server");
     return themeCheckExecutable(path);
   } catch (e) {
     return undefined;
@@ -228,7 +217,7 @@ async function shopifyCLIExecutable(command) {
   if (isWin) return;
   return {
     command,
-    args: ['theme', 'language-server'],
+    args: ["theme", "language-server"],
   };
 }
 
@@ -244,7 +233,7 @@ async function commandExists(command) {
     !isWin && (await exec(`[[ -f "${command}" ]]`));
   } catch (e) {
     throw new CommandNotFoundError(
-      `${command} not found, are you sure this is the correct path?`,
+      `${command} not found, are you sure this is the correct path?`
     );
   }
 }
